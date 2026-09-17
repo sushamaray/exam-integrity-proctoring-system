@@ -7,6 +7,33 @@ Repository: <https://github.com/neel2214/AOOP.git>
 
 ---
 
+## Quick start: frontend only (no backend)
+
+The backend is currently **disabled**. `frontend/.env` sets `VITE_MOCK_API=true`, so
+sign-in is handled in the browser by `frontend/src/api/mockBackend.js`. You only need
+**Node.js** (see section 2) and Git:
+
+```
+git clone https://github.com/neel2214/AOOP.git
+cd AOOP/frontend
+npm install
+npm run dev
+```
+
+Open the URL Vite prints (usually <http://localhost:5173>) and sign in with any demo
+account — password `password123`:
+
+| Role | Email |
+|---|---|
+| Student | `student@uiu.ac.bd` |
+| Faculty | `faculty@uiu.ac.bd` |
+| Invigilator | `invigilator@uiu.ac.bd` |
+
+To use the real backend again, set `VITE_MOCK_API=false` in `frontend/.env` (or put that
+line in `frontend/.env.local`), restart `npm run dev`, and follow the full setup below.
+
+---
+
 ## What you are installing, and why
 
 | Tool | Version to install | Why |

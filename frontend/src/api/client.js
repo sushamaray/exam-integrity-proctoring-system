@@ -1,3 +1,5 @@
+import { mockFetch } from './mockBackend'
+
 /** An error carrying the HTTP status and the server's own message. */
 export class ApiError extends Error {
   constructor(status, message, fieldErrors = {}) {
@@ -18,6 +20,10 @@ export class ApiError extends Error {
  * @throws {ApiError} on any non-2xx response
  */
 export async function apiFetch(path, { method = 'GET', body } = {}) {
+  if (import.meta.env.VITE_MOCK_API === 'true') {
+    return mockFetch(path, { method, body })
+  }
+
   const response = await fetch(path, {
     method,
     // Same-origin in dev thanks to the Vite proxy, but explicit so this keeps
