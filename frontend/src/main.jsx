@@ -1,21 +1,19 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
-
-// Self-hosted so the typeface is bundled with the app. A webfont fetched from a
-// CDN at runtime is one campus-wifi hiccup away from falling back mid-demo.
-import '@fontsource-variable/inter'
-
-import App from './App.jsx'
-import { AuthProvider } from './auth/AuthProvider.jsx'
+import '@fontsource/space-grotesk/400.css'
+import '@fontsource/space-grotesk/500.css'
+import '@fontsource/space-grotesk/600.css'
+import '@fontsource/space-grotesk/700.css'
+import '@fontsource/jetbrains-mono/400.css'
+import '@fontsource/jetbrains-mono/500.css'
 import './index.css'
+import App from './App.jsx'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <BrowserRouter>
-      <AuthProvider>
-        <App />
-      </AuthProvider>
+      <App />
     </BrowserRouter>
-  </StrictMode>,
+  </StrictMode>
 )
