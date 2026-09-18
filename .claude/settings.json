@@ -4,7 +4,11 @@
       "Bash(powershell -NoProfile -Command 'Get-NetTCPConnection -LocalPort 8080 -State Listen -ErrorAction SilentlyContinue | ForEach-Object { $p = Get-Process -Id $_.OwningProcess -ErrorAction SilentlyContinue; if \\($p\\) { '\\\\''{0} PID={1} started={2}'\\\\'' -f $p.ProcessName, $p.Id, $p.StartTime } }')",
       "Bash(curl -s -o /dev/null -w \"ping  HTTP %{http_code}\\\\n\" --max-time 5 http://localhost:8080/api/ping)",
       "Bash(curl -s -o /dev/null -w \"login HTTP %{http_code}\\\\n\" --max-time 5 -X POST http://localhost:8080/api/auth/login -H \"Content-Type: application/json\" -d '{\"email\":\"faculty@uiu.ac.bd\",\"password\":\"password123\"}')",
-      "Bash(powershell -NoProfile -Command 'Get-CimInstance Win32_Process -Filter \"Name='\\\\''java.exe'\\\\''\" | ForEach-Object { '\\\\''{0}  {1}'\\\\'' -f $_.ProcessId, $_.CommandLine.Substring\\(0, [Math]::Min\\(160, $_.CommandLine.Length\\)\\) }')"
+      "Bash(powershell -NoProfile -Command 'Get-CimInstance Win32_Process -Filter \"Name='\\\\''java.exe'\\\\''\" | ForEach-Object { '\\\\''{0}  {1}'\\\\'' -f $_.ProcessId, $_.CommandLine.Substring\\(0, [Math]::Min\\(160, $_.CommandLine.Length\\)\\) }')",
+      "Bash(python -)",
+      "Bash(npx eslint *)",
+      "Bash(cp ../demo/demo-exam.csv ../frontend/public/sample-questions.csv)",
+      "Bash(./mvnw -q compile)"
     ]
   }
 }

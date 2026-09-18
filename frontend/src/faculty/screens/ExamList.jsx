@@ -3,15 +3,20 @@ import { Link } from 'react-router-dom'
 import Button from '../../shared/ui/Button.jsx'
 import { getExams } from '../api.js'
 import { STATE_PILL } from '../lib/tone.js'
+import ScheduleExamPanel from './ScheduleExamPanel.jsx'
 
 const PILL_BASE = 'inline-flex items-center rounded-full px-2.5 py-[5px] text-xs font-medium whitespace-nowrap'
 
 export default function ExamList() {
   const [rows, setRows] = useState(null)
+  const [error, setError] = useState(null)
+  const [scheduling, setScheduling] = useState(false)
 
   useEffect(() => {
     let alive = true
-    getExams().then((d) => alive && setRows(d.rows))
+    getExams()
+      .then((d) => alive && setRows(d.rows))
+      .catch((err) => alive && setError(err.message))
     return () => { alive = false }
   }, [])
 
@@ -20,10 +25,20 @@ export default function ExamList() {
       <div className="flex items-center justify-between gap-4 flex-wrap mb-4">
         <h1 className="m-0 text-2xl font-semibold leading-tight tracking-[-0.02em]">Exams</h1>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm">Import questions (CSV)</Button>
-          <Button variant="primary" size="sm">Schedule exam</Button>
+          <Button variant="outline" size="sm" onClick={() => setScheduling(true)}>Import questions (CSV)</Button>
+          <Button variant="primary" size="sm" onClick={() => setScheduling(true)}>Schedule exam</Button>
         </div>
       </div>
+
+      {scheduling && (
+        <ScheduleExamPanel
+          onClose={() => setScheduling(false)}
+          onCreated={(row) => {
+            setRows((prev) => [row, ...(prev ?? [])])
+            setScheduling(false)
+          }}
+        />
+      )}
 
       <div className="border border-navy/14 rounded-xl bg-surface overflow-x-auto">
         <div className="grid grid-cols-[minmax(180px,2fr)_104px_116px_120px_140px_88px] min-w-[860px]
@@ -34,7 +49,10 @@ export default function ExamList() {
         </div>
 
         {!rows && (
-          <div className="p-6 text-ink/42">Loading exams…</div>
+          <div className="p-6 text-ink/42">{error ?? 'Loading exams…'}</div>
+        )}
+        {rows?.length === 0 && (
+          <div className="p-6 text-ink/42">No exams in the courses you staff.</div>
         )}
 
         {rows?.map((x) => (
@@ -51,7 +69,9 @@ export default function ExamList() {
             <span className="text-ink/66 tabular-nums">{x.pool}</span>
             <span className="text-ink/66 tabular-nums">{x.students}</span>
             <span className="text-ink/66">{x.flags}</span>
-            <Link to={x.to} className="font-medium justify-self-end">{x.action}</Link>
+            {x.action
+              ? <Link to={x.to} className="font-medium justify-self-end">{x.action}</Link>
+              : <span />}
           </div>
         ))}
       </div>

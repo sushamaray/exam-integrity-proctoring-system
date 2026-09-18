@@ -1,4 +1,3 @@
-// Tier → Tailwind classes, kept in one place so no screen invents a raw hex.
 export const TIER_PILL = {
   clear:    'bg-transparent text-ink/50 border border-navy/18',
   review:   'bg-navy/8 text-navy border border-navy/18',

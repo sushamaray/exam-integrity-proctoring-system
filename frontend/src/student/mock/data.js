@@ -1,18 +1,3 @@
-export const student = { name: 'Nadia Rahman', id: '2021-3-60-081', initials: 'NR' }
-
-export const upcomingExam = {
-  code: 'CSE 4103',
-  title: 'Advanced OOP Midterm',
-  when: 'Thursday 19 March · 10:00 · 60 minutes · 40 questions',
-  status: 'Opens in 2 days',
-}
-
-export const pastExams = [
-  { id: 1, name: 'Quiz 2 · Design Patterns', date: '4 March', score: '17 / 20', action: 'Review' },
-  { id: 2, name: 'Quiz 1 · Encapsulation', date: '18 February', score: '19 / 20', action: 'Review' },
-  { id: 3, name: 'Lab 3 · Inheritance', date: '9 February', score: '24 / 25', action: 'Review' },
-]
-
 export const weakTopics = [
   { label: 'Concurrency', pct: 41 },
   { label: 'Generics', pct: 58 },
@@ -183,8 +168,3 @@ export const codingProblem = {
     { name: 'Case 3', detail: 'hidden' },
   ],
 }
-
-export const reviewQuestions = questions.map((q, i) => ({
-  ...q,
-  yourAnswer: i % 4 === 3 ? q.options[(q.options.findIndex((o) => o.id === q.correct) + 1) % 4].id : q.correct,
-}))

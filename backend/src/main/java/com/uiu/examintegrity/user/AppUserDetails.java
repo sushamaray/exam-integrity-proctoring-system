@@ -7,15 +7,9 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-/**
- * Adapts our {@link User} entity to what Spring Security expects.
- *
- * <p>Carrying the id, name and role here means endpoints like /api/auth/me can
- * answer from the session principal without another database round trip.
- */
 public class AppUserDetails implements UserDetails {
-
     private final Long id;
+    private final String studentId;
     private final String fullName;
     private final String email;
     private final String passwordHash;
@@ -24,6 +18,7 @@ public class AppUserDetails implements UserDetails {
 
     public AppUserDetails(User user) {
         this.id = user.getId();
+        this.studentId = user.getStudentId();
         this.fullName = user.getFullName();
         this.email = user.getEmail();
         this.passwordHash = user.getPasswordHash();
@@ -33,6 +28,10 @@ public class AppUserDetails implements UserDetails {
 
     public Long getId() {
         return id;
+    }
+
+    public String getStudentId() {
+        return studentId;
     }
 
     public String getFullName() {
@@ -57,7 +56,6 @@ public class AppUserDetails implements UserDetails {
         return passwordHash;
     }
 
-    /** Spring Security's "username" is the email in this system. */
     @Override
     public String getUsername() {
         return email;

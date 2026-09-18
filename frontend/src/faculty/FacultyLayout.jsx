@@ -1,7 +1,9 @@
 import { Outlet } from 'react-router-dom'
 import { SidebarShell } from '../shared/ui/SidebarNav.jsx'
-import { IconCalendar, IconGrid, IconFlag, IconClock, IconGraph, IconSplit, IconBars } from '../shared/ui/Icon.jsx'
-import { invigilator } from './mock/data.js'
+import { IconCalendar, IconGrid, IconFlag, IconGraph, IconBars } from '../shared/ui/Icon.jsx'
+import { useAuth } from '../auth/context.js'
+import LogoutButton from '../auth/LogoutButton.jsx'
+import { initialsOf } from '../auth/initials.js'
 
 const groups = [
   {
@@ -15,22 +17,29 @@ const groups = [
   {
     label: 'Evidence',
     items: [
-      { to: '/faculty/session/8f21c', icon: <IconClock />, label: 'Session detail' },
       { to: '/faculty/collusion', icon: <IconGraph />, label: 'Collusion graph' },
-      { to: '/faculty/diff/a/b', icon: <IconSplit />, label: 'Answer diff' },
       { to: '/faculty/analysis', icon: <IconBars />, label: 'Item analysis' },
     ],
   },
 ]
 
+const roleLabel = (role = '') => role.charAt(0) + role.slice(1).toLowerCase()
+
 export default function FacultyLayout() {
+  const { user } = useAuth()
+
   return (
     <div className="flex items-start min-h-screen bg-paper text-ink">
       <SidebarShell
         title="Cohort"
         subtitle="Faculty console"
         groups={groups}
-        user={{ initials: invigilator.initials, name: invigilator.name, role: invigilator.role }}
+        user={{
+          initials: initialsOf(user.fullName),
+          name: user.fullName,
+          role: roleLabel(user.role),
+        }}
+        action={<LogoutButton />}
       />
       <div className="flex-1 min-w-0">
         <Outlet />

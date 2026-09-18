@@ -14,23 +14,18 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-/**
- * An account. Mapped to the "users" table created by V1__create_users_table.sql.
- *
- * <p>This entity never leaves the service layer -- controllers return
- * {@code UserResponse} instead, so the password hash cannot be serialised into a
- * response by accident.
- */
 @Entity
 @Table(name = "users")
 @Getter
 @Setter
 @NoArgsConstructor
 public class User {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Column(name = "student_id", unique = true, length = 32)
+    private String studentId;
 
     @Column(name = "full_name", nullable = false, length = 120)
     private String fullName;

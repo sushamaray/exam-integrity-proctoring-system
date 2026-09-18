@@ -5,7 +5,8 @@ import { useProctoring } from '../hooks/useProctoring.js'
 
 export default function CodingExam() {
   const [problem, setProblem] = useState(null)
-  useProctoring('cse4103-coding')
+
+  useProctoring(null, { enabled: false })
 
   useEffect(() => {
     let alive = true

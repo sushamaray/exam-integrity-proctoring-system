@@ -1,7 +1,9 @@
 import { Outlet } from 'react-router-dom'
 import { SidebarShell } from '../shared/ui/SidebarNav.jsx'
 import { IconGrid, IconDoc, IconCode, IconBook, IconChart, IconShield } from '../shared/ui/Icon.jsx'
-import { student } from './mock/data.js'
+import { useAuth } from '../auth/context.js'
+import LogoutButton from '../auth/LogoutButton.jsx'
+import { initialsOf } from '../auth/initials.js'
 
 const groups = [
   {
@@ -23,13 +25,21 @@ const groups = [
 ]
 
 export default function StudentLayout() {
+  const { user } = useAuth()
+
   return (
     <div className="flex items-start min-h-screen bg-paper text-ink">
       <SidebarShell
         title="Cohort"
         subtitle="Student portal"
         groups={groups}
-        user={{ initials: student.initials, name: student.name, role: student.id }}
+        user={{
+          initials: initialsOf(user.fullName),
+          name: user.fullName,
+
+          role: user.studentId ?? 'Student',
+        }}
+        action={<LogoutButton />}
       />
       <div className="flex-1 min-w-0">
         <Outlet />

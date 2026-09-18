@@ -1,0 +1,12 @@
+topic,question,option_a,option_b,option_c,option_d,correct,marks
+Design patterns,"Explain why composition is often preferred over inheritance when designing classes. Answer in 3-4 sentences.",,,,,,3
+Design patterns,Which pattern lets you add behaviour to one object without changing other instances of its class?,Singleton,Decorator,Factory Method,Template Method,b,1
+Design patterns,"A subject must notify an unknown number of listeners, without knowing their concrete types. Which pattern fits?",Adapter,Builder,Observer,Proxy,c,1
+Generics,What does the wildcard in List<? extends Number> allow?,Adding any subclass of Number,Both reading and adding,Neither reading nor adding,Reading elements as Number but not adding,d,1
+Generics,Why is a generic type argument unavailable at runtime in Java?,Type erasure keeps bytecode compatible with older code,The JVM stores it in the constant pool,Generics are resolved lazily,The garbage collector removes it,a,1
+Collections,Which Map keeps entries in the order they were inserted?,HashMap,TreeMap,LinkedHashMap,Hashtable,c,1
+Collections,"You override equals() on a HashMap key, but not hashCode(). What happens?",The map throws an exception,Lookups with an equal key may fail,Nothing changes,Keys are replaced on every put,b,1
+Exceptions,What distinguishes a checked exception from an unchecked one?,It cannot be subclassed,It always stops the JVM,It must be declared or caught,It cannot be caught,c,1
+Exceptions,"Both try and finally contain a return statement. Which value reaches the caller?",The value from try,Whichever ran first,The code does not compile,The value from finally,d,1
+Concurrency,Two threads increment a shared int with ++ and no synchronization. What is the risk?,Lost updates because ++ is not atomic,A guaranteed deadlock,A ConcurrentModificationException,No risk; ++ is atomic,a,1
+SOLID,"A class that parses files, formats reports and sends emails mainly violates which principle?",Liskov Substitution,Single Responsibility,Interface Segregation,Dependency Inversion,b,1

@@ -1,6 +1,10 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
 
-import Login          from './student/screens/Login.jsx'
+import { AuthProvider } from './auth/AuthContext.jsx'
+import RequireAuth    from './auth/RequireAuth.jsx'
+import Login          from './auth/Login.jsx'
+import Register       from './auth/Register.jsx'
+
 import StudentLayout  from './student/StudentLayout.jsx'
 import Dashboard      from './student/screens/Dashboard.jsx'
 import Briefing       from './student/screens/Briefing.jsx'
@@ -20,30 +24,47 @@ import ItemAnalysis      from './faculty/screens/ItemAnalysis.jsx'
 
 export default function App() {
   return (
-    <Routes>
-      <Route path="/" element={<Navigate to="/login" replace />} />
-      <Route path="/login" element={<Login />} />
+    <AuthProvider>
+      <Routes>
+        <Route path="/" element={<Navigate to="/login" replace />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
 
-      <Route path="/student" element={<StudentLayout />}>
-        <Route index            element={<Dashboard />} />
-        <Route path="briefing"  element={<Briefing />} />
-        <Route path="exam"      element={<ObjectiveExam />} />
-        <Route path="coding"    element={<CodingExam />} />
-        <Route path="practice"  element={<Practice />} />
-        <Route path="results"   element={<PostReview />} />
-      </Route>
+        <Route
+          path="/student"
+          element={
+            <RequireAuth roles={['STUDENT']}>
+              <StudentLayout />
+            </RequireAuth>
+          }
+        >
+          <Route index            element={<Dashboard />} />
+          <Route path="briefing/:examId?" element={<Briefing />} />
+          <Route path="exam/:examId?"     element={<ObjectiveExam />} />
+          <Route path="coding"    element={<CodingExam />} />
+          <Route path="practice"  element={<Practice />} />
+          <Route path="results/:sessionId?" element={<PostReview />} />
+        </Route>
 
-      <Route path="/faculty" element={<FacultyLayout />}>
-        <Route index               element={<ExamList />} />
-        <Route path="monitor"      element={<LiveMonitor />} />
-        <Route path="session/:id"  element={<SessionDetail />} />
-        <Route path="review"       element={<ReviewQueue />} />
-        <Route path="collusion"    element={<CollusionGraph />} />
-        <Route path="diff/:a/:b"   element={<AnswerDiff />} />
-        <Route path="analysis"     element={<ItemAnalysis />} />
-      </Route>
+        <Route
+          path="/faculty"
+          element={
+            <RequireAuth roles={['FACULTY', 'INVIGILATOR']}>
+              <FacultyLayout />
+            </RequireAuth>
+          }
+        >
+          <Route index               element={<ExamList />} />
+          <Route path="monitor/:examId?"   element={<LiveMonitor />} />
+          <Route path="session/:id"  element={<SessionDetail />} />
+          <Route path="review"       element={<ReviewQueue />} />
+          <Route path="collusion/:examId?" element={<CollusionGraph />} />
+          <Route path="diff/:pairId"      element={<AnswerDiff />} />
+          <Route path="analysis"     element={<ItemAnalysis />} />
+        </Route>
 
-      <Route path="*" element={<Navigate to="/login" replace />} />
-    </Routes>
+        <Route path="*" element={<Navigate to="/login" replace />} />
+      </Routes>
+    </AuthProvider>
   )
 }

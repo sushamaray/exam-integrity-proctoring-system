@@ -18,7 +18,7 @@ export function SidebarLink({ to, end, icon, label }) {
   )
 }
 
-export function SidebarShell({ logoLetter = 'C', title, subtitle, groups, user, children }) {
+export function SidebarShell({ logoLetter = 'C', title, subtitle, groups, user, action, children }) {
   return (
     <aside
       className="w-[216px] shrink-0 flex flex-col gap-[22px] p-3 px-3
@@ -59,10 +59,11 @@ export function SidebarShell({ logoLetter = 'C', title, subtitle, groups, user, 
             flex items-center justify-center text-[11px] font-semibold text-navy shrink-0">
             {user.initials}
           </span>
-          <span className="flex flex-col leading-tight">
-            <span className="text-xs font-medium">{user.name}</span>
-            <span className="text-[11px] text-ink/42">{user.role}</span>
+          <span className="flex flex-col leading-tight min-w-0">
+            <span className="text-xs font-medium truncate">{user.name}</span>
+            <span className="text-[11px] text-ink/42 truncate">{user.role}</span>
           </span>
+          {action && <span className="ml-auto shrink-0">{action}</span>}
         </div>
       )}
     </aside>

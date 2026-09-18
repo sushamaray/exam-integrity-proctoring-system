@@ -11,8 +11,6 @@ export default function Practice() {
   const [index, setIndex] = useState(0)
   const [picked, setPicked] = useState(null)
 
-  // Adjusting state during render when the topic changes, rather than
-  // resetting it with a synchronous setState inside an effect.
   if (topic !== prevTopic) {
     setPrevTopic(topic)
     setQuestions(null)

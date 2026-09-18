@@ -1,29 +1,40 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useParams } from 'react-router-dom'
 import Button from '../../shared/ui/Button.jsx'
 import Card from '../../shared/ui/Card.jsx'
-import { getBriefing } from '../api.js'
+import { getBriefing, listOpenExams } from '../api.js'
+import { describeWindow } from '../lib/openExam.js'
 
 export default function Briefing() {
+  const { examId } = useParams()
   const [data, setData] = useState(null)
+  const [openExam, setOpenExam] = useState(null)
 
   useEffect(() => {
     let alive = true
     getBriefing().then((d) => alive && setData(d))
+
+    listOpenExams()
+      .then((open) => {
+        if (!alive) return
+        setOpenExam(open.find((e) => String(e.id) === examId) ?? open[0] ?? null)
+      })
+      .catch(() => {})
     return () => { alive = false }
-  }, [])
+  }, [examId])
 
   if (!data) {
     return <main className="p-5 text-sm text-ink/42">Loading briefing…</main>
   }
 
-  const { exam, readiness, recorded, notRecorded } = data
-  const allOk = readiness.every((c) => c.ok)
+  const { readiness, recorded, notRecorded } = data
 
   return (
     <main className="p-5 text-sm max-w-[820px]">
       <h1 className="m-0 mb-1 text-2xl font-semibold leading-tight tracking-[-0.02em]">Exam briefing</h1>
-      <p className="m-0 mb-4 text-ink/55">{exam.title} · {exam.when}</p>
+      <p className="m-0 mb-4 text-ink/55">
+        {openExam ? `${openExam.title} · ${describeWindow(openExam)}` : 'No exam is open right now'}
+      </p>
 
       <Card className="p-4 mb-4">
         <div className="text-xs font-medium tracking-wide uppercase text-ink/42 mb-3">System check</div>
@@ -64,9 +75,13 @@ export default function Briefing() {
           Once you start, the timer cannot be paused. Leaving fullscreen or switching tabs is logged,
           not blocked — flags are reviewed by a person before anything happens to your grade.
         </p>
-        <Link to="/student/exam">
-          <Button disabled={!allOk}>Start exam</Button>
-        </Link>
+        {openExam ? (
+          <Link to={`/student/exam/${openExam.id}`}>
+            <Button>{openExam.sessionState === 'IN_PROGRESS' ? 'Resume exam' : 'Start exam'}</Button>
+          </Link>
+        ) : (
+          <Button disabled>No exam open</Button>
+        )}
       </div>
     </main>
   )

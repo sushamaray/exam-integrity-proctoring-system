@@ -6,21 +6,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Profile;
+import org.springframework.core.annotation.Order;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
-/**
- * Creates one account per role on first run of the "local" profile.
- *
- * <p>Seeding here rather than in a Flyway migration means the hashes come from
- * the application's own {@link PasswordEncoder}, so nobody has to paste a bcrypt
- * string into SQL -- and changing the encoder later cannot leave stale hashes
- * behind in a migration that has already been applied.
- */
 @Component
 @Profile("local")
+@Order(1)
 public class DemoDataSeeder implements CommandLineRunner {
-
     private static final Logger log = LoggerFactory.getLogger(DemoDataSeeder.class);
     private static final String DEMO_PASSWORD = "password123";
 

@@ -8,14 +8,18 @@ const STAT_TONE = { plain: 'text-ink', review: 'text-navy', escalate: 'text-navy
 export default function ReviewQueue() {
   const [data, setData] = useState(null)
 
+  const [error, setError] = useState(null)
+
   useEffect(() => {
     let alive = true
-    getReviewQueue().then((d) => alive && setData(d))
+    getReviewQueue()
+      .then((d) => alive && setData(d))
+      .catch((err) => alive && setError(err.message))
     return () => { alive = false }
   }, [])
 
   if (!data) {
-    return <main className="p-5 text-sm text-ink/42">Loading review queue…</main>
+    return <main className="p-5 text-sm text-ink/42">{error ?? 'Loading review queue…'}</main>
   }
 
   return (
@@ -41,6 +45,9 @@ export default function ReviewQueue() {
           <span>Session</span><span>Student</span><span>Risk</span>
           <span>Contributing signals</span><span>Tier</span><span>State</span>
         </div>
+        {data.rows.length === 0 && (
+          <div className="p-6 text-ink/42">Nothing waiting for review.</div>
+        )}
         {data.rows.map((r) => (
           <div
             key={r.id}
