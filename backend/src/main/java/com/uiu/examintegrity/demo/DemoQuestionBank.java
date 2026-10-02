@@ -185,4 +185,76 @@ final class DemoQuestionBank {
                             "A payroll batch running beside a user transfer could trigger it.",
                             "An online shop updating stock from two requests has the same bug.",
                             "A counter of page views shows the same lost update.")));
+
+    /**
+     * A coding question. The cases become {@code questions.test_cases}; a hidden one still
+     * decides the grade but never reaches the browser.
+     */
+    record CodingItem(
+            String topic,
+            String bloomLevel,
+            short difficulty,
+            String body,
+            String explanation,
+            String starterCode,
+            String marks,
+            List<Case> cases) {
+    }
+
+    record Case(String name, String input, String expected, boolean hidden) {
+    }
+
+    static final List<CodingItem> CODING = List.of(
+            new CodingItem("arrays", "Apply", (short) 2,
+                    "Read an integer n, then n integers on the following line. "
+                            + "Print the largest of them, and nothing else.",
+                    "A single pass holding the best value so far is enough -- there is no need to store "
+                            + "the whole array or to sort it. Seed the running maximum with the first "
+                            + "value rather than with zero, or every negative input gives the wrong answer.",
+                    """
+                    #include <stdio.h>
+
+                    int main(void) {
+                        int n;
+                        if (scanf("%d", &n) != 1 || n < 1) {
+                            return 1;
+                        }
+
+                        /* TODO: read n integers and print the largest one. */
+
+                        return 0;
+                    }
+                    """,
+                    "10",
+                    List.of(
+                            new Case("Mixed values", "5\n3 9 2 9 4\n", "9", false),
+                            new Case("A single value", "1\n-7\n", "-7", false),
+                            new Case("All negative", "6\n-5 -2 -9 -1 -3 -4\n", "-1", true),
+                            new Case("Repeated maximum", "4\n1000000 999999 1000000 7\n", "1000000", true))),
+
+            new CodingItem("loops", "Apply", (short) 2,
+                    "Read a non-negative integer and print the sum of its digits, and nothing else.",
+                    "Repeatedly take the last digit with % 10 and drop it with / 10 until nothing is left. "
+                            + "Zero is the case that catches people out: a while loop that tests the value "
+                            + "before the first iteration prints nothing at all.",
+                    """
+                    #include <stdio.h>
+
+                    int main(void) {
+                        int value;
+                        if (scanf("%d", &value) != 1) {
+                            return 1;
+                        }
+
+                        /* TODO: print the sum of the digits of value. */
+
+                        return 0;
+                    }
+                    """,
+                    "10",
+                    List.of(
+                            new Case("Three digits", "907\n", "16", false),
+                            new Case("Zero", "0\n", "0", false),
+                            new Case("All nines", "99999\n", "45", true),
+                            new Case("A power of ten", "100000\n", "1", true))));
 }

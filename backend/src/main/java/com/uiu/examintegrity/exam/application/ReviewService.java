@@ -21,6 +21,8 @@ import com.uiu.examintegrity.exam.application.view.SittingSummary;
 import com.uiu.examintegrity.exam.domain.Paper;
 import com.uiu.examintegrity.exam.persistence.AnswerEntity;
 import com.uiu.examintegrity.exam.persistence.AnswerRepository;
+import com.uiu.examintegrity.exam.persistence.CodeSubmission;
+import com.uiu.examintegrity.exam.persistence.CodeSubmissionRepository;
 import com.uiu.examintegrity.exam.persistence.ExamQuestion;
 import com.uiu.examintegrity.exam.persistence.ExamQuestionRepository;
 import com.uiu.examintegrity.exam.persistence.ExamSessionEntity;
@@ -39,13 +41,16 @@ public class ReviewService {
     private final ExamQuestionRepository examQuestionRepository;
     private final AnswerRepository answerRepository;
     private final QuestionOptionRepository optionRepository;
+    private final CodeSubmissionRepository codeSubmissionRepository;
 
     public ReviewService(ExamSessionRepository sessionRepository, ExamQuestionRepository examQuestionRepository,
-            AnswerRepository answerRepository, QuestionOptionRepository optionRepository) {
+            AnswerRepository answerRepository, QuestionOptionRepository optionRepository,
+            CodeSubmissionRepository codeSubmissionRepository) {
         this.sessionRepository = sessionRepository;
         this.examQuestionRepository = examQuestionRepository;
         this.answerRepository = answerRepository;
         this.optionRepository = optionRepository;
+        this.codeSubmissionRepository = codeSubmissionRepository;
     }
 
     public List<SittingSummary> sittings(Long userId) {
@@ -81,6 +86,10 @@ public class ReviewService {
         answerRepository.findWithOptionBySessionId(sessionId)
                 .forEach(a -> answers.put(a.getQuestion().getId(), a));
 
+        Map<Long, CodeSubmission> finalRuns = new HashMap<>();
+        codeSubmissionRepository.findFinalBySessionId(sessionId)
+                .forEach(run -> finalRuns.putIfAbsent(run.getQuestion().getId(), run));
+
         List<ReviewedQuestion> questions = new ArrayList<>();
         for (Long id : paper.questionOrder()) {
             ExamQuestion eq = pool.get(id);
@@ -99,9 +108,12 @@ public class ReviewService {
             String yours = answer == null ? null
                     : answer.getOption() != null ? answer.getOption().getLabel() : answer.getTextAnswer();
 
+            CodeSubmission finalRun = finalRuns.get(id);
             questions.add(new ReviewedQuestion(id, question.getType().name(), question.getTopic(),
                     question.getBloomLevel(), question.getBody(), shown, correct, yours, question.getExplanation(),
-                    answer == null ? BigDecimal.ZERO : answer.getMarksAwarded(), marksFor(eq)));
+                    answer == null ? BigDecimal.ZERO : answer.getMarksAwarded(), marksFor(eq),
+                    finalRun == null ? null : finalRun.getPassedCount(),
+                    finalRun == null ? null : finalRun.getTotalCount()));
         }
 
         return new ReviewView(sessionId, session.getExam().getTitle(), session.getSubmittedAt(),

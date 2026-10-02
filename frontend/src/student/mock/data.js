@@ -144,27 +144,3 @@ export const practiceTopics = [
   { key: 'exceptions', label: 'Exceptions' },
 ]
 
-export const codingProblem = {
-  title: 'Assemble a window closest to target',
-  statement: 'Given a sorted pool of ints and a target mean, return the n-length contiguous window whose mean is closest to target.',
-  starter: `public class Solution {
-    static int[] assemble(int[] pool, int n, double target) {
-        int[][] best = new int[1][n];
-        double bestGap = Double.MAX_VALUE;
-        // greedy seed, then local swap
-        Arrays.sort(pool);
-        for (int i = 0; i + n <= pool.length; i++) {
-            double mean = window(pool, i, n);
-            if (Math.abs(mean - target) < bestGap) {
-                bestGap = Math.abs(mean - target);
-            }
-        }
-        return best[0];
-    }
-}`,
-  tests: [
-    { name: 'Case 1', detail: 'pool=[1,2,3,4,5] n=3' },
-    { name: 'Case 2', detail: 'hidden' },
-    { name: 'Case 3', detail: 'hidden' },
-  ],
-}

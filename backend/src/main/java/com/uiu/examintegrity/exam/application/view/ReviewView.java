@@ -24,6 +24,16 @@ public record ReviewView(
             String yourAnswer,
             String explanation,
             BigDecimal marksAwarded,
-            BigDecimal maxMarks) {
+            BigDecimal maxMarks,
+            Integer passedTests,
+            Integer totalTests) {
+
+        /** For every type but CODING, where there are no tests to report. */
+        public ReviewedQuestion(Long id, String type, String topic, String bloom, String text,
+                List<OptionView> options, String correct, String yourAnswer, String explanation,
+                BigDecimal marksAwarded, BigDecimal maxMarks) {
+            this(id, type, topic, bloom, text, options, correct, yourAnswer, explanation,
+                    marksAwarded, maxMarks, null, null);
+        }
     }
 }

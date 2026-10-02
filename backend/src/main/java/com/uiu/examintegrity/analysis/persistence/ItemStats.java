@@ -1,4 +1,4 @@
-package com.uiu.examintegrity.analysis;
+package com.uiu.examintegrity.analysis.persistence;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -60,7 +60,11 @@ public class ItemStats {
     @Column(name = "avg_seconds", precision = 8, scale = 2)
     private BigDecimal avgSeconds;
 
-    @Column(name = "computed_at", nullable = false, insertable = false, updatable = false)
+    /**
+     * Set by the service rather than left to the column default, because recompute reads the view
+     * back in the same transaction and a database-generated value would still be null there.
+     */
+    @Column(name = "computed_at", nullable = false, updatable = false)
     private Instant computedAt;
 
     public ItemStats(Exam exam, Question question, int attempts, int correctCount) {

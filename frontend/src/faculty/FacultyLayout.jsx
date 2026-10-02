@@ -1,6 +1,6 @@
 import { Outlet } from 'react-router-dom'
 import { SidebarShell } from '../shared/ui/SidebarNav.jsx'
-import { IconCalendar, IconGrid, IconFlag, IconGraph, IconBars } from '../shared/ui/Icon.jsx'
+import { IconCalendar, IconGrid, IconFlag, IconGraph, IconBars, IconCode } from '../shared/ui/Icon.jsx'
 import { useAuth } from '../auth/context.js'
 import LogoutButton from '../auth/LogoutButton.jsx'
 import { initialsOf } from '../auth/initials.js'
@@ -19,6 +19,12 @@ const groups = [
     items: [
       { to: '/faculty/collusion', icon: <IconGraph />, label: 'Collusion graph' },
       { to: '/faculty/analysis', icon: <IconBars />, label: 'Item analysis' },
+    ],
+  },
+  {
+    label: 'Tools',
+    items: [
+      { to: '/faculty/lab', icon: <IconCode />, label: 'Code lab' },
     ],
   },
 ]

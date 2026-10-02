@@ -23,8 +23,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.uiu.examintegrity.analysis.ItemStats;
-import com.uiu.examintegrity.analysis.ItemStatsRepository;
+import com.uiu.examintegrity.analysis.application.ItemAnalysisService;
 import com.uiu.examintegrity.similarity.application.SimilarityService;
 import com.uiu.examintegrity.course.Course;
 import com.uiu.examintegrity.course.CourseRepository;
@@ -101,7 +100,7 @@ public class ExamDemoSeeder implements CommandLineRunner {
     private final RiskScoreRepository riskScoreRepository;
     private final FlagRepository flagRepository;
     private final SimilarityService similarityService;
-    private final ItemStatsRepository itemStatsRepository;
+    private final ItemAnalysisService itemAnalysisService;
 
     private final Random random = new Random(SEED);
 
@@ -112,7 +111,7 @@ public class ExamDemoSeeder implements CommandLineRunner {
             ExamSessionRepository examSessionRepository, AnswerRepository answerRepository,
             ProctoringEventRepository proctoringEventRepository, RiskScoreRepository riskScoreRepository,
             FlagRepository flagRepository, SimilarityService similarityService,
-            ItemStatsRepository itemStatsRepository) {
+            ItemAnalysisService itemAnalysisService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.courseRepository = courseRepository;
@@ -127,7 +126,7 @@ public class ExamDemoSeeder implements CommandLineRunner {
         this.riskScoreRepository = riskScoreRepository;
         this.flagRepository = flagRepository;
         this.similarityService = similarityService;
-        this.itemStatsRepository = itemStatsRepository;
+        this.itemAnalysisService = itemAnalysisService;
     }
 
     @Override
@@ -164,6 +163,12 @@ public class ExamDemoSeeder implements CommandLineRunner {
         Exam live = seedExam(course, faculty, "Final -- Collections, Concurrency and Exceptions",
                 ExamStatus.LIVE, now.minus(35, ChronoUnit.MINUTES), 60, 8 * 60, questions);
 
+        // Its own exam rather than a question on the Final: a coding sitting runs in the editor
+        // at /student/coding, so a mixed paper would have nowhere to render half of itself.
+        List<Question> codingPool = seedCodingQuestions(course, faculty);
+        Exam lab = seedExam(course, faculty, "Lab Test 1 -- Loops and Arrays in C",
+                ExamStatus.LIVE, now.minus(10, ChronoUnit.MINUTES), 45, 8 * 60, codingPool, null);
+
         Map<Long, Double> ability = new HashMap<>();
         for (User student : cohort) {
             ability.put(student.getId(), 0.25 + random.nextDouble() * 0.7);
@@ -174,7 +179,7 @@ public class ExamDemoSeeder implements CommandLineRunner {
         List<ExamSessionEntity> pastSittings =
                 seedPastSittings(past, cohort, pastPool, optionsByQuestion, ability, written);
         plantCollusion(pastSittings, written);
-        seedItemStats(past, questions, optionsByQuestion, pastSittings);
+        itemAnalysisService.recomputeUnchecked(past.getId());
 
         List<ExamSessionEntity> liveSittings = seedLiveSittings(live, cohort.subList(1, cohort.size()),
                 questions, optionsByQuestion, ability);
@@ -182,10 +187,11 @@ public class ExamDemoSeeder implements CommandLineRunner {
 
         var report = similarityService.runFor(past.getId());
 
-        log.info("Seeded demo course {} -- {} students, {} questions, {} sittings, {} events, {} similarity pairs",
-                COURSE_CODE, cohort.size(), pastPool.size(),
+        log.info("Seeded demo course {} -- {} students, {} questions ({} coding), {} sittings, "
+                + "{} events, {} similarity pairs, lab test #{}",
+                COURSE_CODE, cohort.size(), pastPool.size() + codingPool.size(), codingPool.size(),
                 pastSittings.size() + liveSittings.size(), proctoringEventRepository.count(),
-                report.edges().size());
+                report.edges().size(), lab.getId());
     }
 
     private User requireAccount(String email) {
@@ -296,6 +302,18 @@ public class ExamDemoSeeder implements CommandLineRunner {
 
     private Exam seedExam(Course course, User author, String title, ExamStatus status,
             Instant startsAt, int durationMinutes, int windowMinutes, List<Question> pool) {
+        return seedExam(course, author, title, status, startsAt, durationMinutes, windowMinutes, pool,
+                BigDecimal.ONE);
+    }
+
+    /**
+     * @param marksPerQuestion the flat override to put on every pooled question, or null to keep
+     *                         each question's own max -- a coding question is worth far more than
+     *                         one mark, and flattening it would make the grade meaningless
+     */
+    private Exam seedExam(Course course, User author, String title, ExamStatus status,
+            Instant startsAt, int durationMinutes, int windowMinutes, List<Question> pool,
+            BigDecimal marksPerQuestion) {
         Exam exam = new Exam(course, title, startsAt,
                 startsAt.plus(windowMinutes, ChronoUnit.MINUTES), durationMinutes);
         exam.setStatus(status);
@@ -304,11 +322,46 @@ public class ExamDemoSeeder implements CommandLineRunner {
 
         List<ExamQuestion> pooled = new ArrayList<>();
         for (Question question : pool) {
-            pooled.add(new ExamQuestion(exam, question, BigDecimal.ONE));
+            pooled.add(new ExamQuestion(exam, question,
+                    marksPerQuestion != null ? marksPerQuestion : question.getMaxMarks()));
         }
         examQuestionRepository.saveAll(pooled);
 
         return exam;
+    }
+
+    /**
+     * The coding questions, with their starter code and cases. These are seeded rather than
+     * authored because the CSV import path only understands MCQ and written questions.
+     */
+    private List<Question> seedCodingQuestions(Course course, User author) {
+        List<Question> saved = new ArrayList<>();
+        for (DemoQuestionBank.CodingItem item : DemoQuestionBank.CODING) {
+            Question question = new Question(course, QuestionType.CODING, item.body(),
+                    new BigDecimal(item.marks()));
+            question.setTopic(item.topic());
+            question.setBloomLevel(item.bloomLevel());
+            question.setDifficulty(item.difficulty());
+            question.setExplanation(item.explanation());
+            question.setStarterCode(item.starterCode());
+            question.setTestCases(testCases(item));
+            question.setCreatedBy(author);
+            saved.add(questionRepository.save(question));
+        }
+        return saved;
+    }
+
+    private static List<Map<String, Object>> testCases(DemoQuestionBank.CodingItem item) {
+        List<Map<String, Object>> rows = new ArrayList<>();
+        for (DemoQuestionBank.Case testCase : item.cases()) {
+            Map<String, Object> row = new LinkedHashMap<>();
+            row.put("name", testCase.name());
+            row.put("input", testCase.input());
+            row.put("expected", testCase.expected());
+            row.put("hidden", testCase.hidden());
+            rows.add(row);
+        }
+        return rows;
     }
 
     private void drawPaper(ExamSessionEntity sitting, List<Question> questions,
@@ -464,86 +517,6 @@ public class ExamDemoSeeder implements CommandLineRunner {
         return candidates.get(random.nextInt(candidates.size()));
     }
 
-    private static final double EXTREME_GROUP_FRACTION = 0.27;
-
-    private void seedItemStats(Exam exam, List<Question> questions,
-            Map<Long, List<QuestionOption>> optionsByQuestion, List<ExamSessionEntity> sittings) {
-        List<ExamSessionEntity> ranked = new ArrayList<>(sittings);
-        ranked.sort(Comparator.comparing(ExamSessionEntity::getTotalMarks).reversed());
-        int groupSize = Math.max(1, (int) Math.round(ranked.size() * EXTREME_GROUP_FRACTION));
-        List<ExamSessionEntity> upper = ranked.subList(0, groupSize);
-        List<ExamSessionEntity> lower = ranked.subList(ranked.size() - groupSize, ranked.size());
-
-        Map<Long, List<AnswerEntity>> bySession = new HashMap<>();
-        for (ExamSessionEntity sitting : sittings) {
-            bySession.put(sitting.getId(), answerRepository.findBySessionId(sitting.getId()));
-        }
-
-        List<ItemStats> stats = new ArrayList<>();
-        for (Question question : questions) {
-            int attempts = 0;
-            int correct = 0;
-            long totalSeconds = 0;
-            Map<String, Integer> chosen = new LinkedHashMap<>();
-            for (QuestionOption option : optionsByQuestion.get(question.getId())) {
-                chosen.put(option.getLabel(), 0);
-            }
-
-            for (List<AnswerEntity> answers : bySession.values()) {
-                for (AnswerEntity answer : answers) {
-                    if (!answer.getQuestion().getId().equals(question.getId())) {
-                        continue;
-                    }
-                    attempts++;
-                    if (answer.getOption().isCorrect()) {
-                        correct++;
-                    }
-                    chosen.merge(answer.getOption().getLabel(), 1, Integer::sum);
-                    totalSeconds += Duration.between(answer.getFirstSeenAt(), answer.getAnsweredAt())
-                            .toSeconds();
-                }
-            }
-
-            if (attempts == 0) {
-                continue;
-            }
-
-            ItemStats item = new ItemStats(exam, question, attempts, correct);
-            item.setDifficultyIndex(ratio(correct, attempts));
-            item.setDiscriminationIndex(
-                    ratio(correctIn(upper, bySession, question), groupSize)
-                            .subtract(ratio(correctIn(lower, bySession, question), groupSize)));
-            item.setAvgSeconds(BigDecimal.valueOf(totalSeconds)
-                    .divide(BigDecimal.valueOf(attempts), 2, RoundingMode.HALF_UP));
-
-            Map<String, BigDecimal> distribution = new LinkedHashMap<>();
-            for (Map.Entry<String, Integer> entry : chosen.entrySet()) {
-                distribution.put(entry.getKey(), ratio(entry.getValue(), attempts));
-            }
-            item.setOptionDistribution(distribution);
-
-            stats.add(item);
-        }
-
-        itemStatsRepository.saveAll(stats);
-    }
-
-    private int correctIn(List<ExamSessionEntity> group, Map<Long, List<AnswerEntity>> bySession, Question question) {
-        int correct = 0;
-        for (ExamSessionEntity sitting : group) {
-            for (AnswerEntity answer : bySession.get(sitting.getId())) {
-                if (answer.getQuestion().getId().equals(question.getId()) && answer.getOption().isCorrect()) {
-                    correct++;
-                }
-            }
-        }
-        return correct;
-    }
-
-    private BigDecimal ratio(int numerator, int denominator) {
-        return BigDecimal.valueOf(numerator)
-                .divide(BigDecimal.valueOf(denominator), 4, RoundingMode.HALF_UP);
-    }
 
     private void plantCollusion(List<ExamSessionEntity> sittings, Map<Long, DemoQuestionBank.WrittenItem> written) {
         Long writtenId = written.keySet().iterator().next();

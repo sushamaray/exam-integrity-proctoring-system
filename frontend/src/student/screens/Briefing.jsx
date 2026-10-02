@@ -3,7 +3,7 @@ import { Link, useParams } from 'react-router-dom'
 import Button from '../../shared/ui/Button.jsx'
 import Card from '../../shared/ui/Card.jsx'
 import { getBriefing, listOpenExams } from '../api.js'
-import { describeWindow } from '../lib/openExam.js'
+import { describeWindow, examPath } from '../lib/openExam.js'
 
 export default function Briefing() {
   const { examId } = useParams()
@@ -76,7 +76,7 @@ export default function Briefing() {
           not blocked — flags are reviewed by a person before anything happens to your grade.
         </p>
         {openExam ? (
-          <Link to={`/student/exam/${openExam.id}`}>
+          <Link to={examPath(openExam)}>
             <Button>{openExam.sessionState === 'IN_PROGRESS' ? 'Resume exam' : 'Start exam'}</Button>
           </Link>
         ) : (

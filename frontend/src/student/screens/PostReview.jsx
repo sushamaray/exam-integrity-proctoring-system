@@ -89,9 +89,15 @@ export default function PostReview() {
       <div className="flex flex-col gap-3">
         {review.questions.map((q, i) => {
           const isChoice = q.options.length > 0
+          const isCode = q.type === 'CODING'
           const answered = q.yourAnswer != null && q.yourAnswer !== ''
           const isCorrect = isChoice && q.yourAnswer === q.correct
-          const status = !answered ? 'Not answered' : !isChoice ? 'Awaiting grading' : isCorrect ? 'Correct' : 'Incorrect'
+          // A coding answer is graded, so it reports its tests rather than waiting for a person.
+          const status = !answered
+            ? 'Not answered'
+            : isCode
+              ? q.totalTests == null ? 'Never submitted' : `${q.passedTests} / ${q.totalTests} tests passed`
+              : !isChoice ? 'Awaiting grading' : isCorrect ? 'Correct' : 'Incorrect'
           return (
             <Card key={q.id} className="p-4">
               <div className="flex items-center justify-between gap-3 mb-2">
@@ -134,8 +140,9 @@ export default function PostReview() {
                   })}
                 </div>
               ) : (
-                <p className="m-0 mb-3 p-3 rounded-[6px] border border-navy/14 bg-paper whitespace-pre-wrap">
-                  {answered ? q.yourAnswer : 'No answer written.'}
+                <p className={`m-0 mb-3 p-3 rounded-[6px] border border-navy/14 bg-paper
+                  whitespace-pre-wrap ${isCode ? 'font-mono text-xs overflow-x-auto' : ''}`}>
+                  {answered ? q.yourAnswer : isCode ? 'No code submitted.' : 'No answer written.'}
                 </p>
               )}
 

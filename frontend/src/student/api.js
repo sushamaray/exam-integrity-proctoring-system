@@ -33,8 +33,50 @@ export const listSittings = () => http('/student/sittings')
 
 export const getReview = (sessionId) => http(`/sessions/${sessionId}/review`)
 
-export const getCodingProblem = () =>
-  USE_MOCKS ? delay(260, mock.codingProblem) : http('/exams/coding')
+export const listLanguages = () => http('/code/languages')
+
+export const runCode = (sessionId, questionId, body) =>
+  http(`/sessions/${sessionId}/code/${questionId}/run`, {
+    method: 'POST',
+    body: JSON.stringify(body),
+  })
+
+export const submitCode = (sessionId, questionId, body) =>
+  http(`/sessions/${sessionId}/code/${questionId}/submit`, {
+    method: 'POST',
+    body: JSON.stringify(body),
+  })
+
+export const prepareConsole = (sessionId, questionId, body) =>
+  http(`/sessions/${sessionId}/code/${questionId}/console`, {
+    method: 'POST',
+    body: JSON.stringify(body),
+  })
+
+export const startConsole = (sessionId, runId) =>
+  http(`/sessions/${sessionId}/console/${runId}/start`, { method: 'POST' })
+
+export const sendConsoleInput = (sessionId, runId, line) =>
+  http(`/sessions/${sessionId}/console/${runId}/stdin`, {
+    method: 'POST',
+    body: JSON.stringify({ line }),
+  })
+
+export const stopConsole = (sessionId, runId) =>
+  http(`/sessions/${sessionId}/console/${runId}`, { method: 'DELETE' })
+
+// The same four calls with no exam behind them: the free compiler.
+export const preparePracticeConsole = (body) =>
+  http('/code/console', { method: 'POST', body: JSON.stringify(body) })
+
+export const startPracticeConsole = (runId) =>
+  http(`/code/console/${runId}/start`, { method: 'POST' })
+
+export const sendPracticeConsoleInput = (runId, line) =>
+  http(`/code/console/${runId}/stdin`, { method: 'POST', body: JSON.stringify({ line }) })
+
+export const stopPracticeConsole = (runId) =>
+  http(`/code/console/${runId}`, { method: 'DELETE' })
 
 export const getPracticeTopics = () =>
   USE_MOCKS ? delay(200, { topics: mock.practiceTopics }) : http('/practice/topics')

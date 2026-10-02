@@ -69,8 +69,18 @@ public class SecurityConfig {
                         .requestMatchers("/api/faculty/**").hasAnyRole("FACULTY", "INVIGILATOR")
                         .requestMatchers("/api/sessions/*/risk", "/api/exams/*/monitor",
                                 "/api/exams/*/similarity", "/api/exams/*/similarity/**",
-                                "/api/similarity/**", "/ws/**")
+                                "/api/similarity/**",
+                                // Carries the spread of answers across every option, which is close
+                                // enough to an answer key that a student must not be able to read it.
+                                "/api/exams/*/item-analysis", "/api/exams/*/item-analysis/**")
                                 .hasAnyRole("FACULTY", "INVIGILATOR")
+
+                        // Students need the socket too, for the output of a program they are
+                        // running. Opening the handshake does NOT open the data: every
+                        // subscription is authorized per destination in WebSocketConfig, which
+                        // refuses any topic it does not recognise, keeps the risk topics staff
+                        // only, and lets a student read a console topic only if the run is theirs.
+                        .requestMatchers("/ws/**").authenticated()
                         .requestMatchers("/api/student/**").hasRole("STUDENT")
                         .requestMatchers("/api/exams/*/sessions", "/api/sessions/**").hasRole("STUDENT")
 

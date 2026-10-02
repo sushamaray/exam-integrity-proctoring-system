@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import Button from '../../shared/ui/Button.jsx'
 import Card from '../../shared/ui/Card.jsx'
 import { getDashboard, listOpenExams, listSittings } from '../api.js'
-import { describeWindow } from '../lib/openExam.js'
+import { describeWindow, examPath } from '../lib/openExam.js'
 import { useAuth } from '../../auth/context.js'
 
 const PAST_DAY = new Intl.DateTimeFormat(undefined, { day: 'numeric', month: 'short' })
@@ -55,7 +55,7 @@ export default function Dashboard() {
                   {sittingLabel(exam.sessionState)}
                 </span>
                 {exam.sessionState === 'IN_PROGRESS' ? (
-                  <Link to={`/student/exam/${exam.id}`}><Button size="sm">Resume exam</Button></Link>
+                  <Link to={examPath(exam)}><Button size="sm">Resume exam</Button></Link>
                 ) : exam.sessionState == null ? (
                   <Link to={`/student/briefing/${exam.id}`}><Button size="sm">Go to briefing</Button></Link>
                 ) : null}

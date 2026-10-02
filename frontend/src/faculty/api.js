@@ -1,5 +1,4 @@
-import { USE_MOCKS, delay, http } from '../shared/lib/api.js'
-import * as mock from './mock/data.js'
+import { http } from '../shared/lib/api.js'
 import * as adapt from './lib/adapters.js'
 
 export const getExams = async () => ({ rows: (await http('/faculty/exams')).map(adapt.examRow) })
@@ -32,5 +31,7 @@ export const runSimilarity = (examId) => http(`/exams/${examId}/similarity/run`,
 
 export const getPair = (pairId) => http(`/similarity/pairs/${pairId}`)
 
-export const getItemAnalysis = () =>
-  USE_MOCKS ? delay(280, { items: mock.items }) : http('/faculty/item-analysis')
+export const getItemAnalysis = (examId) => http(`/exams/${examId}/item-analysis`)
+
+export const runItemAnalysis = (examId) =>
+  http(`/exams/${examId}/item-analysis/run`, { method: 'POST' })

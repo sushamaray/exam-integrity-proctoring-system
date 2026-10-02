@@ -30,8 +30,10 @@ import com.uiu.examintegrity.exam.application.view.SavedAnswer;
 import com.uiu.examintegrity.exam.application.view.SessionView;
 import com.uiu.examintegrity.exam.application.view.SessionView.OptionView;
 import com.uiu.examintegrity.exam.application.view.SessionView.QuestionView;
+import com.uiu.examintegrity.exam.application.view.SessionView.TestCaseView;
 import com.uiu.examintegrity.exam.application.view.SubmitResult;
 import com.uiu.examintegrity.exam.domain.AnswerValue;
+import com.uiu.examintegrity.exam.domain.code.CodingProblem;
 import com.uiu.examintegrity.exam.domain.ExamSession;
 import com.uiu.examintegrity.exam.domain.Paper;
 import com.uiu.examintegrity.exam.domain.QuestionDraw;
@@ -56,6 +58,7 @@ import com.uiu.examintegrity.question.Question;
 import com.uiu.examintegrity.question.QuestionOption;
 import com.uiu.examintegrity.question.QuestionOptionRepository;
 import com.uiu.examintegrity.question.QuestionRepository;
+import com.uiu.examintegrity.question.QuestionType;
 import com.uiu.examintegrity.user.UserRepository;
 
 @Service
@@ -109,18 +112,25 @@ public class SessionService {
         }
 
         List<Exam> exams = examRepository.findOpen(courseIds, SITTABLE, clock.instant());
+        if (exams.isEmpty()) {
+            return List.of();
+        }
+        List<Long> examIds = exams.stream().map(Exam::getId).toList();
+
         Map<Long, ExamSessionEntity> sittings = new HashMap<>();
-        for (ExamSessionEntity sitting : sessionRepository.findByUserIdAndExamIdIn(
-                userId, exams.stream().map(Exam::getId).toList())) {
+        for (ExamSessionEntity sitting : sessionRepository.findByUserIdAndExamIdIn(userId, examIds)) {
             sittings.put(sitting.getExam().getId(), sitting);
         }
+        Set<Long> codingExams = Set.copyOf(
+                examQuestionRepository.findExamIdsHolding(examIds, QuestionType.CODING));
 
         return exams.stream().map(exam -> {
             ExamSessionEntity sitting = sittings.get(exam.getId());
             return new OpenExamView(exam.getId(), exam.getTitle(), exam.getCourse().getCode(),
                     exam.getStartsAt(), exam.getEndsAt(), exam.getDurationMinutes(),
                     sitting == null ? null : sitting.getId(),
-                    sitting == null ? null : sitting.getStatus().name());
+                    sitting == null ? null : sitting.getStatus().name(),
+                    codingExams.contains(exam.getId()));
         }).toList();
     }
 
@@ -267,6 +277,21 @@ public class SessionService {
         return entity;
     }
 
+    /**
+     * The sample cases a coding question shows in the editor. Hidden cases are filtered out
+     * here and nowhere else -- their expected output is the answer key.
+     */
+    private static List<TestCaseView> sampleCases(Question question) {
+        if (question.getType() != QuestionType.CODING) {
+            return List.of();
+        }
+        CodingProblem problem =
+                CodingProblem.from(question.getId(), question.getStarterCode(), question.getTestCases());
+        return problem.visibleTests().stream()
+                .map(test -> new TestCaseView(test.name(), test.input(), test.expected()))
+                .toList();
+    }
+
     private SessionView view(ExamSessionEntity entity, ExamSession session, Instant now) {
         Paper paper = session.paper();
 
@@ -288,7 +313,8 @@ public class SessionService {
                     .map(label -> new OptionView(label, texts.get(label)))
                     .toList();
             questionViews.add(new QuestionView(id, question.getType().name(), question.getTopic(),
-                    question.getBloomLevel(), question.getBody(), options));
+                    question.getBloomLevel(), question.getBody(), options,
+                    question.getStarterCode(), sampleCases(question)));
         }
 
         Map<Long, String> answers = new LinkedHashMap<>();

@@ -7,10 +7,13 @@ import java.util.Map;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
+import com.uiu.examintegrity.exam.domain.code.RunStatus;
 import com.uiu.examintegrity.question.Question;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -49,6 +52,18 @@ public class CodeSubmission {
     @Column(name = "is_final", nullable = false)
     private boolean isFinal;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 24)
+    private RunStatus status = RunStatus.OK;
+
+    /** The compiler's own diagnostics, already scrubbed of server paths. */
+    @Column(name = "compile_output", columnDefinition = "text")
+    private String compileOutput;
+
+    /**
+     * Unused by the local executor, which runs synchronously and has nothing to poll. Kept
+     * because it is the handle a remote judge would hand back.
+     */
     @Column(name = "judge0_token", length = 64)
     private String judge0Token;
 

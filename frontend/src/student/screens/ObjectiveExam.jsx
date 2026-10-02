@@ -2,25 +2,10 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import Button from '../../shared/ui/Button.jsx'
 import { formatClock } from '../../shared/lib/time.js'
-import { getSession, listOpenExams, saveAnswer, startSession, submitSession } from '../api.js'
+import { getSession, listOpenExams, startSession, submitSession } from '../api.js'
+import { examPath } from '../lib/openExam.js'
+import { TEXT_SAVE_DEBOUNCE_MS, saveWithRetry } from '../lib/persistAnswer.js'
 import { useProctoring } from '../hooks/useProctoring.js'
-
-const RETRY_DELAYS_MS = [1000, 3000]
-const TEXT_SAVE_DEBOUNCE_MS = 800
-
-const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
-
-async function saveWithRetry(sessionId, questionId, answer) {
-  for (let attempt = 0; ; attempt++) {
-    try {
-      return await saveAnswer(sessionId, questionId, answer)
-    } catch (err) {
-      const retryable = !err.status || err.status >= 500
-      if (!retryable || attempt >= RETRY_DELAYS_MS.length) throw err
-      await wait(RETRY_DELAYS_MS[attempt])
-    }
-  }
-}
 
 export default function ObjectiveExam() {
   const { examId } = useParams()
@@ -53,7 +38,8 @@ export default function ObjectiveExam() {
       listOpenExams()
         .then((open) => {
           if (!alive) return
-          if (open.length > 0) navigate(`/student/exam/${open[0].id}`, { replace: true })
+          const next = open.find((e) => !e.coding) ?? open[0]
+          if (next) navigate(examPath(next), { replace: true })
           else setError('no exam is open right now')
         })
         .catch((err) => alive && setError(err.message))
