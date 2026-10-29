@@ -77,4 +77,3 @@ This project was developed as part of the CSE 2118 coursework at United Internat
 
 ---
 
-**Note:** Features described here are based on the project report. Actual implementation details may vary with the current source code.
